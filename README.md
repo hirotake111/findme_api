@@ -1,8 +1,14 @@
 ## Findme API server
 
+### Required environment variables
+
+- SECRETKEY - secret key for api server
+- PORT (optional) - port number to listen on
+
+### Build docker image
+
 ```bash
-# build a Docker image for development
-IMAGE=findme-api-development
-docker build -t $IMAGE -f Dockerfile.dev .
+# development
+./build.sh
 
 ```

@@ -1,4 +1,4 @@
-FROM node:14.12.0 AS builder
+FROM node:16.13 AS builder
 
 #
 # Build stage
@@ -17,7 +17,7 @@ RUN npm run build
 #
 # Production stage
 #
-FROM node:14.12.0
+FROM node:16.13
 # Mark as production
 ENV NODE_ENV=production
 WORKDIR /app

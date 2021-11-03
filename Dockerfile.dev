@@ -1,13 +1,15 @@
-FROM node:14.12.0
+FROM node:16.13
 
 WORKDIR /app
-# copy js and json file
-COPY ./*.js* /app/
+# copy package.json and yarn.lock
+COPY ./package.json /app/
 COPY ./yarn.lock /app/
 
 # Install dev modules
 RUN yarn install
 
-# Copy and compile files
+# copy js and json files
+COPY ./*.js* /app/
+# Copy source files
 COPY src ./src
 CMD [ "yarn", "dev" ]

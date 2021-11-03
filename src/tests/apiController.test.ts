@@ -1,5 +1,5 @@
 import { config } from "../utils/config";
-import { getApiController } from "./apiController";
+import { getApiController } from "../controllers/apiController";
 
 const mockStatus = jest.fn();
 const mockSend = jest.fn();

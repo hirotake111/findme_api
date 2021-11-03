@@ -1,0 +1,18 @@
+version: "3.7"
+
+services:
+  api: # api
+    image: findme-api-development
+    container_name: findme-api
+    volumes:
+      - type: bind
+        source: ./src
+        target: /app/src
+    # depends_on:
+    #   - api_db
+    #   - api_redis
+    ports:
+      - 3000:3000
+    environment:
+      - SECRETKEY=sssshhhhhi
+      - PORT=3000

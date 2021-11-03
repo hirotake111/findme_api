@@ -10,11 +10,12 @@ let apiRouter: Router;
 
 const mockController: ApiController = {
   getPosition: (req, res) => res.status(200).send({ id: req.params.id }),
-  postPosition: (req, res) => res.status(201).send({ result: "success" }),
+  postPosition: (req, res) => res.status(201).send({ result: req.body }),
 };
 
 beforeEach(() => {
   app = express();
+  app.use(express.json());
   apiRouter = getApiRouter(mockController);
   app.use("/", apiRouter);
 });
@@ -28,7 +29,8 @@ it("should invoke apiController.getPosition, passing id", async () => {
 });
 
 it("should invoke apiController.postPosition", async () => {
-  expect.assertions(1);
-  const res = await request(app).post("/");
+  expect.assertions(2);
+  const res = await request(app).post("/").send({ latitude: 1, longitude: 2 });
   expect(res.statusCode).toBe(201);
+  expect(res.body.result).toEqual({ latitude: 1, longitude: 2 });
 });

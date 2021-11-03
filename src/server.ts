@@ -5,6 +5,8 @@ import { getApiRouter } from "./routers/apiRouter";
 import { config } from "./utils/config";
 
 const app = express();
+// use JSON body parser middleware
+app.use(express.json());
 
 // route for status check
 app.get("/", (req, res) => res.send({ status: "OK" }));

@@ -5,6 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "nodemon",
+    "build": "tsc --build tsconfig.json",
     "test": "docker-compose run --rm api yarn test_",
     "test_": "jest --watchAll"
   },

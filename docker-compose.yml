@@ -16,3 +16,4 @@ services:
     environment:
       - SECRETKEY=sssshhhhhi
       - PORT=3000
+      - NODE_ENV=development

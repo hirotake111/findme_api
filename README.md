@@ -24,5 +24,5 @@ docker -t $IMAGE .
 - DOCKER_PASSWORD
 - DOCKER_IMAGE_TAG_NAME - image name
 - K8S_CONFIG_DATA - YAML based data to deploy imaget to Kubernetes cluster
-- K8S_CONTAINER_NAME - container name
-- K8S_DEPLOYMENT_NAME - deployment name
+- K8S_CONTAINER_NAME - containers.name
+- K8S_DEPLOYMENT_NAME - metadata.name

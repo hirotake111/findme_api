@@ -41,7 +41,8 @@ jobs:
         with:
           config: ${{ secrets.K8S_CONFIG_DATA }}
           version: v1.22.1
-          command: set image deployment/$DEPLOYMENT $CONTAINER=$IMAGE
+          # command: set image deployment/$DEPLOYMENT $CONTAINER=$IMAGE
+          command: rollout restart deployment/$DEPLOYMENT
 
       - name: Verify deployment
         if: ${{ success() }}

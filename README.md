@@ -1,6 +1,12 @@
-## Findme API server
+# ⚡️Findme API server⚡️
 
-API server for my portofolio [Findme](https://findme.hiro.one)
+Simple API server for my portofolio [Findme](https://findme.hiro.one)
+
+### Tech stacks
+
+- Node.js
+- TypeScript
+- Redis
 
 ### Build docker image
 

@@ -5,5 +5,5 @@ module.exports = {
   collectCoverage: true,
   clearMocks: true,
   coverageDirectory: "coverage",
-  modulePathIgnorePatterns: ["/src/utils/testHelper.ts"],
+  modulePathIgnorePatterns: ["<rootDir>/utils/testHelper.ts"],
 };

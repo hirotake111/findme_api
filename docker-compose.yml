@@ -8,12 +8,18 @@ services:
       - type: bind
         source: ./src
         target: /app/src
-    # depends_on:
-    #   - api_db
-    #   - api_redis
+    depends_on:
+      - redis
     ports:
       - 3000:3000
     environment:
+      - NODE_ENV=development
       - SECRETKEY=sssshhhhhi
       - PORT=3000
-      - NODE_ENV=development
+      - REDIS_URL=redis://findme-api-redis
+
+  redis: # Redis server
+    image: redis:6.2.0-alpine
+    container_name: findme-api-redis
+    ports:
+      - "6379:6379"

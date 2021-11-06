@@ -9,6 +9,7 @@ export const config = {
     url: process.env.REDIS_URL || "redis://localhost:6379",
     ttl: 5 * 60, // 5 minutes
   },
+  cors: process.env.CORS || "localhost",
 };
 
 export type Config = typeof config;

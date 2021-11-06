@@ -6,7 +6,8 @@ export const getMockConfig = (): Config => {
     port: 3333,
     secretkey: "secret",
     NODE_ENV: "development",
-    redis: { url: "redis://localhost:6379" },
+    redis: { url: "redis://localhost:6379", ttl: 5 * 60 },
+    cors: "localhost",
   };
 };
 

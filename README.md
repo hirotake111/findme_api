@@ -18,6 +18,7 @@ docker -t $IMAGE .
 - SECRETKEY - secret key for api server
 - PORT (optional) - port number to listen on
 - REDIS_URL - URL for Redis
+- CORS - FQDN to be allowed performing network call
 
 ### Required secrets for GitHub Actions
 

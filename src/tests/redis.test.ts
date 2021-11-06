@@ -17,7 +17,7 @@ describe("getRedisClient", () => {
     try {
       const client = await getRedisClient({
         ...config,
-        redis: { url: "xxxx" },
+        redis: { url: "xxxx", ttl: 30 },
       });
     } catch (e) {
       if (e instanceof Error)

@@ -1,6 +1,7 @@
 import { Redis } from "ioredis";
 
 import { Position } from "../types";
+import { Config } from "../utils/config";
 import { validatePosition } from "../utils/validators";
 
 export interface PositionService {
@@ -8,7 +9,10 @@ export interface PositionService {
   set: (key: string, payload: any) => Promise<Position>;
 }
 
-export const getPositionService = (client: Redis): PositionService => {
+export const getPositionService = (
+  client: Redis,
+  config: Config
+): PositionService => {
   return {
     /**
      * get value by key and return value as a Position object
@@ -31,9 +35,13 @@ export const getPositionService = (client: Redis): PositionService => {
       // validate payload
       const data = validatePosition(payload);
       try {
-        const result = await client.set(key, JSON.stringify(data));
-        if (result !== "OK") {
-          throw new Error("database error");
+        // const result = await client.set(key, JSON.stringify(data));
+        const pipeline = client.pipeline();
+        pipeline.set(key, JSON.stringify(data));
+        pipeline.expire(key, config.redis.ttl);
+        const [err, _] = await pipeline.exec();
+        if (err instanceof Error) {
+          throw err;
         }
         return data;
       } catch (e) {

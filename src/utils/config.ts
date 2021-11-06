@@ -7,6 +7,7 @@ export const config = {
   NODE_ENV: process.env.NODE_ENV || "development",
   redis: {
     url: process.env.REDIS_URL || "redis://localhost:6379",
+    ttl: 5 * 60, // 5 minutes
   },
 };
 

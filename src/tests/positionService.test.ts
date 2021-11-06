@@ -4,6 +4,7 @@ import {
   PositionService,
 } from "../services/positionService";
 import { Position } from "../types";
+import { config } from "../utils/config";
 import { getMockPosition } from "../utils/testHelper";
 
 let client: Redis;
@@ -17,6 +18,13 @@ const fakeClient = {
   get: async (key: string) => {
     throw new Error("database error");
   },
+  pipeline: () => ({
+    set: () => {},
+    expire: () => {},
+    exec: () => {
+      throw new Error("database error!");
+    },
+  }),
 };
 
 beforeEach(async () => {
@@ -24,7 +32,7 @@ beforeEach(async () => {
     lazyConnect: true,
   });
   await client.connect();
-  service = getPositionService(client);
+  service = getPositionService(client, config);
   // flush all data in Redis server
   await client.flushall();
 });
@@ -37,6 +45,13 @@ describe("positionService.set()", () => {
     expect(await client.get("key1")).toEqual(JSON.stringify(data));
   });
 
+  it("should set data with expiration time", async () => {
+    expect.assertions(1);
+    const data = getMockPosition();
+    await service.set("key1", data);
+    expect(await client.ttl("key1")).toBeLessThanOrEqual(config.redis.ttl);
+  });
+
   it("should set data including code", async () => {
     expect.assertions(1);
     const data: Position = { ...getMockPosition(), code: "xxxx" };
@@ -46,7 +61,7 @@ describe("positionService.set()", () => {
 
   it("should throw an error if database throws it", async () => {
     expect.assertions(1);
-    const service = getPositionService(fakeClient as any);
+    const service = getPositionService(fakeClient as any, config);
     try {
       await service.set("key1", getMockPosition());
     } catch (e) {
@@ -54,14 +69,20 @@ describe("positionService.set()", () => {
     }
   });
 
-  it("should throw an error if database returns anything but not 'OK'", async () => {
+  it("should throw an error redis returns err object", async () => {
     expect.assertions(1);
-    const clientNotOk = { set: (key: string, value: any) => null };
-    const service = getPositionService(clientNotOk as any);
+    const clientWithErr = {
+      pipeline: () => ({
+        set: () => {},
+        expire: () => {},
+        exec: () => [new Error("unknown error"), {}],
+      }),
+    };
+    const service = getPositionService(clientWithErr as any, config);
     try {
       await service.set("key1", getMockPosition());
     } catch (e) {
-      if (e instanceof Error) expect(e.message).toBe("database error");
+      if (e instanceof Error) expect(e.message).toBe("unknown error");
     }
   });
 });
@@ -84,7 +105,7 @@ describe("positionService.get()", () => {
 
   it("should throw an error it database throws it", async () => {
     expect.assertions(1);
-    const service = getPositionService(fakeClient as any);
+    const service = getPositionService(fakeClient as any, config);
     try {
       await service.get("key1");
     } catch (e) {

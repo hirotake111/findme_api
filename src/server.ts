@@ -1,24 +1,39 @@
 import express from "express";
+import pino from "express-pino-logger";
+import cors from "cors";
+
 import { getApiController } from "./controllers/apiController";
 import { getApiRouter } from "./routers/apiRouter";
-
+import { getPositionService } from "./services/positionService";
 import { config } from "./utils/config";
+import { getRedisClient } from "./utils/redis";
 
 const app = express();
+
 // use JSON body parser middleware
 app.use(express.json());
+// logger setting
+app.use(pino());
+// CORS
+app.use(cors({ origin: config.cors }));
 
 // route for status check
 app.get("/", (req, res) => res.send({ status: "OK" }));
 
-// controllers
-const apiController = getApiController(config);
-// routers
-const apiRouter = getApiRouter(apiController);
-// add route
-app.use("/api", apiRouter);
+(async () => {
+  // redis client
+  const redisClient = await getRedisClient(config);
+  // services
+  const positionService = getPositionService(redisClient, config);
+  // controllers
+  const apiController = getApiController(positionService);
+  // routers
+  const apiRouter = getApiRouter(apiController);
+  // add route
+  app.use("/api", apiRouter);
 
-// start server
-app.listen(config.port, () =>
-  console.log(`✨✨ Listening on port ${config.port} ✨✨`)
-);
+  // start server
+  app.listen(config.port, () =>
+    console.log(`✨✨ Listening on port ${config.port} ✨✨`)
+  );
+})();

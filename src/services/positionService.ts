@@ -5,6 +5,9 @@ import { Config } from "../utils/config";
 import { validatePosition } from "../utils/validators";
 
 export interface PositionService {
+  /**
+   * get value by key and return value as a Position object
+   */
   get: (key: string) => Promise<Position | null>;
   set: (key: string, payload: any) => Promise<Position>;
 }

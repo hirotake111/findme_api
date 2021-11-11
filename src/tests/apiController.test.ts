@@ -153,7 +153,79 @@ describe("getPosition", () => {
     await getPosition(req, res, next);
     expect(mockStatus).toHaveBeenCalledWith(500);
     expect(mockSend).toHaveBeenCalledWith({
-      result: "internal server error",
+      result: "error",
+      detail: "internal server error",
+    });
+    console.log = tmp;
+  });
+});
+
+describe("getPositionByCode", () => {
+  let req: any;
+  const { getPositionByCode } = getApiController(mockPositionService);
+  beforeEach(() => {
+    req = {
+      params: { id: "9493ee0f-d324-47de-987d-67d7099ac19b" },
+      body: { code: "abcd" },
+    };
+  });
+
+  it("should return position data if ID and code matches", async () => {
+    expect.assertions(2);
+    mockPositionGet.mockReturnValue({ latitude: 11.111, longitude: 22.222 });
+    await getPositionByCode(req, res, next);
+    expect(mockStatus).toHaveBeenCalledWith(200);
+    expect(mockSend).toHaveBeenCalledWith({
+      result: "success",
+      detail: { latitude: 11.111, longitude: 22.222 },
+    });
+  });
+
+  it("should respond HTTP 400 if ID is invalid", async () => {
+    expect.assertions(2);
+    const { getPositionByCode } = getApiController(mockPositionService);
+    await getPositionByCode({ ...req, params: { id: "xxxx" } }, res, next);
+    expect(mockStatus).toHaveBeenCalledWith(400);
+    expect(mockSend).toHaveBeenCalledWith({
+      result: "error",
+      detail: "invalid ID",
+    });
+  });
+
+  it("should respond HTTP 400 if code is not provided", async () => {
+    expect.assertions(2);
+    const { getPositionByCode } = getApiController(mockPositionService);
+    await getPositionByCode({ ...req, body: { code: null } }, res, next);
+    expect(mockStatus).toHaveBeenCalledWith(400);
+    expect(mockSend).toHaveBeenCalledWith({
+      result: "error",
+      detail: "you need to provide code",
+    });
+  });
+
+  it("should respond HTTP 404 if ID is not found (in the database)", async () => {
+    expect.assertions(2);
+    mockPositionGet.mockReturnValue(null);
+    await getPositionByCode(req, res, next);
+    expect(mockStatus).toHaveBeenCalledWith(404);
+    expect(mockSend).toHaveBeenCalledWith({
+      result: "error",
+      detail: "not found",
+    });
+  });
+
+  it("should respond HTTP 500 if it gets databaase error", async () => {
+    expect.assertions(2);
+    const tmp = console.log;
+    console.log = jest.fn();
+    mockPositionGet.mockImplementation(() => {
+      throw new Error("database error!!!!");
+    });
+    await getPositionByCode(req, res, next);
+    expect(mockStatus).toHaveBeenCalledWith(500);
+    expect(mockSend).toHaveBeenCalledWith({
+      result: "error",
+      detail: "internal server error",
     });
     console.log = tmp;
   });

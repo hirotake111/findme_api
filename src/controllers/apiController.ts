@@ -7,6 +7,7 @@ import { validatePosition } from "../utils/validators";
 
 export interface ApiController {
   getPosition: RequestHandler;
+  getPositionByCode: RequestHandler;
   postPosition: RequestHandler;
 }
 
@@ -31,25 +32,47 @@ export const getApiController = (service: PositionService): ApiController => {
             detail: { latitude: result.latitude, longitude: result.longitude },
           });
         }
-        if (!code) {
-          // code is required but not provided by user
-          return res.status(200).send({ result: "code required" });
-        }
-        if (result.code === code) {
-          // code is required and provided code matches
-          return res.status(200).send({
-            result: "success",
-            detail: { latitude: result.latitude, longitude: result.longitude },
-          });
-        }
-        // provided code does not match
-        return res.status(400).send({
-          result: "bad request",
-          detail: "code does not match",
+        // code is required but not provided by user
+        return res.status(200).send({ result: "code required" });
+      } catch (e) {
+        console.log(e);
+        return res
+          .status(500)
+          .send({ result: "error", detail: "internal server error" });
+      }
+    },
+
+    getPositionByCode: async (req, res) => {
+      // get ID and code
+      const { id } = req.params;
+      const { code } = req.body;
+      // validate ID and code
+      if (!(id && validate(id)))
+        return res.status(400).send({ result: "error", detail: "invalid ID" });
+      if (!code)
+        return res
+          .status(400)
+          .send({ result: "error", detail: "you need to provide code" });
+      // get data from database
+      try {
+        const result = await service.get(id);
+        // if data is not found in the datatabase, respond 404
+        if (!result)
+          return res.status(404).send({ result: "error", detail: "not found" });
+        // respond data
+        res.status(200).send({
+          result: "success",
+          detail: {
+            latitude: result.latitude,
+            longitude: result.longitude,
+            code: result.code,
+          },
         });
       } catch (e) {
         console.log(e);
-        return res.status(500).send({ result: "internal server error" });
+        return res
+          .status(500)
+          .send({ result: "error", detail: "internal server error" });
       }
     },
 

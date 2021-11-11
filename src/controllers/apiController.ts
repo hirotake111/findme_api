@@ -32,22 +32,8 @@ export const getApiController = (service: PositionService): ApiController => {
             detail: { latitude: result.latitude, longitude: result.longitude },
           });
         }
-        if (!code) {
-          // code is required but not provided by user
-          return res.status(200).send({ result: "code required" });
-        }
-        if (result.code === code) {
-          // code is required and provided code matches
-          return res.status(200).send({
-            result: "success",
-            detail: { latitude: result.latitude, longitude: result.longitude },
-          });
-        }
-        // provided code does not match
-        return res.status(400).send({
-          result: "bad request",
-          detail: "code does not match",
-        });
+        // code is required but not provided by user
+        return res.status(200).send({ result: "code required" });
       } catch (e) {
         console.log(e);
         return res

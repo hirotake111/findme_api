@@ -1,4 +1,5 @@
-import { v4 as uuid } from "uuid";
+import { request } from "express";
+import { v4 as uuid, validate } from "uuid";
 
 import { getApiController } from "../controllers/apiController";
 import { PositionService } from "../services/positionService";
@@ -11,20 +12,20 @@ const res = {
 } as any;
 const next = jest.fn();
 
-const mockPositionGet = jest.fn();
-const mockPositionSet = jest.fn();
+const mockGet = jest.fn();
+const mockSet = jest.fn();
 
 const mockPositionService: PositionService = {
-  get: mockPositionGet,
-  set: mockPositionSet,
+  get: mockGet,
+  set: mockSet,
 };
 
 beforeEach(() => {
   mockStatus.mockClear();
   mockStatus.mockReturnThis();
   mockSend.mockClear();
-  mockPositionSet.mockClear();
-  mockPositionSet.mockClear();
+  mockSet.mockClear();
+  mockSet.mockClear();
 });
 
 describe("getPosition", () => {
@@ -37,7 +38,7 @@ describe("getPosition", () => {
 
   it("should return HTTP 200 and position data ID matches", async () => {
     expect.assertions(2);
-    mockPositionGet.mockReturnValue({ latitude: 11.111, longitude: 22.222 });
+    mockGet.mockReturnValue({ latitude: 11.111, longitude: 22.222 });
     await getPosition(req, res, next);
     expect(mockStatus).toHaveBeenCalledWith(200);
     expect(mockSend).toHaveBeenCalledWith({
@@ -48,7 +49,7 @@ describe("getPosition", () => {
 
   it("should return HTTP 404 if ID doesn't match", async () => {
     expect.assertions(2);
-    mockPositionGet.mockReturnValue(null);
+    mockGet.mockReturnValue(null);
     await getPosition(req, res, next);
     expect(mockStatus).toHaveBeenCalledWith(404);
     expect(mockSend).toHaveBeenCalledWith({ result: "not found" });
@@ -67,7 +68,7 @@ describe("getPosition", () => {
 
   it("should respond HTTP 200 with a message 'code required' if record in db contains code", async () => {
     expect.assertions(2);
-    mockPositionGet.mockReturnValue({
+    mockGet.mockReturnValue({
       latitude: 11.111,
       longitude: 22.222,
       code: "asdf",
@@ -81,7 +82,7 @@ describe("getPosition", () => {
     expect.assertions(2);
     const tmp = console.log;
     console.log = jest.fn();
-    mockPositionGet.mockImplementation(() => {
+    mockGet.mockImplementation(() => {
       throw new Error("database error!!!!");
     });
     await getPosition(req, res, next);
@@ -97,6 +98,7 @@ describe("getPosition", () => {
 describe("getPositionByCode", () => {
   let req: any;
   const { getPositionByCode } = getApiController(mockPositionService);
+
   beforeEach(() => {
     req = {
       params: { id: "9493ee0f-d324-47de-987d-67d7099ac19b" },
@@ -106,12 +108,31 @@ describe("getPositionByCode", () => {
 
   it("should return position data if ID and code matches", async () => {
     expect.assertions(2);
-    mockPositionGet.mockReturnValue({ latitude: 11.111, longitude: 22.222 });
+    mockGet.mockReturnValue({
+      latitude: 11.111,
+      longitude: 22.222,
+      code: "abcd",
+    });
     await getPositionByCode(req, res, next);
     expect(mockStatus).toHaveBeenCalledWith(200);
     expect(mockSend).toHaveBeenCalledWith({
       result: "success",
       detail: { latitude: 11.111, longitude: 22.222 },
+    });
+  });
+
+  it("should respond HTTP 400 if code doesn't match", async () => {
+    expect.assertions(2);
+    mockGet.mockReturnValue({
+      latitude: 11.111,
+      longitude: 22.222,
+      code: "aaaa",
+    });
+    await getPositionByCode(req, res, next);
+    expect(mockStatus).toHaveBeenCalledWith(400);
+    expect(mockSend).toHaveBeenCalledWith({
+      result: "error",
+      detail: "incorrect code provided",
     });
   });
 
@@ -139,7 +160,7 @@ describe("getPositionByCode", () => {
 
   it("should respond HTTP 404 if ID is not found (in the database)", async () => {
     expect.assertions(2);
-    mockPositionGet.mockReturnValue(null);
+    mockGet.mockReturnValue(null);
     await getPositionByCode(req, res, next);
     expect(mockStatus).toHaveBeenCalledWith(404);
     expect(mockSend).toHaveBeenCalledWith({
@@ -152,7 +173,7 @@ describe("getPositionByCode", () => {
     expect.assertions(2);
     const tmp = console.log;
     console.log = jest.fn();
-    mockPositionGet.mockImplementation(() => {
+    mockGet.mockImplementation(() => {
       throw new Error("database error!!!!");
     });
     await getPositionByCode(req, res, next);
@@ -166,37 +187,25 @@ describe("getPositionByCode", () => {
 });
 
 describe("postPosition", () => {
-  it("should return HTTP 201 if data stored successfully", async () => {
+  let req: any;
+  const { postPosition } = getApiController(mockPositionService);
+
+  beforeEach(() => {
+    req = { body: { latitude: 100, longitude: 50 } } as any;
+  });
+
+  it("should return HTTP 201 (without code) if data stored successfully", async () => {
     expect.assertions(3);
-    const req = { body: { latitude: 100, longitude: 50 } } as any;
-    const { postPosition } = getApiController(mockPositionService);
-    mockPositionSet.mockReturnValue({ latitude: 100, longitude: 50 });
+    mockSet.mockReturnValue({ latitude: 100, longitude: 50 });
     await postPosition(req, res, next);
     expect(mockStatus).toHaveBeenCalledWith(201);
-    expect(mockSend.mock.calls[0][0].detail.id.length).toBe(36);
+    expect(validate(mockSend.mock.calls[0][0].detail.id)).toBeTruthy();
     expect(mockSend.mock.calls[0][0].detail.position.latitude).toBe(100);
   });
 
-  it("should return HTTP 201 if data (with code) stored successfully", async () => {
-    expect.assertions(3);
-    const req = { body: { latitude: 100, longitude: 50, code: "abcd" } } as any;
-    const { postPosition } = getApiController(mockPositionService);
-    mockPositionSet.mockReturnValue({
-      latitude: 100,
-      longitude: 50,
-      code: "abcd",
-    });
-    await postPosition(req, res, next);
-    expect(mockStatus).toHaveBeenCalledWith(201);
-    expect(mockSend.mock.calls[0][0].detail.id.length).toBe(36);
-    expect(mockSend.mock.calls[0][0].detail.position.code).toBe("abcd");
-  });
-
-  it("should return HTTP 400 if parameters are invalid", async () => {
+  it("should respond HTTP 400 if HTTP payload is invalid", async () => {
     expect.assertions(2);
-    const req = { body: { latitude: 100, longitude: 50 } } as any;
-    const { postPosition } = getApiController(mockPositionService);
-    mockPositionSet.mockImplementation(() => {
+    mockSet.mockImplementation(() => {
       throw new Error("unknown error");
     });
     await postPosition(req, res, next);
@@ -204,6 +213,40 @@ describe("postPosition", () => {
     expect(mockSend).toHaveBeenCalledWith({
       result: "error",
       detail: "invalid payload",
+    });
+  });
+
+  it("should respond HTTP 201 if data (with code) stored successfully", async () => {
+    expect.assertions(3);
+    req = { body: { ...req.body, code: "abcd" } } as any;
+    mockSet.mockReturnValue({ latitude: 100, longitude: 50, code: "abcd" });
+    await postPosition(req, res, next);
+    expect(mockStatus).toHaveBeenCalledWith(201);
+    expect(mockSend.mock.calls[0][0].detail.id.length).toBe(36);
+    expect(mockSend.mock.calls[0][0].detail.position.code).toBe("abcd");
+  });
+
+  it("should respond HTTP 400 if code is provided but is too short", async () => {
+    expect.assertions(2);
+    const req = { body: { ...request.body, code: "abc" } } as any;
+    mockSet.mockReturnValue({ latitude: 100, longitude: 50, code: "xxxx" });
+    await postPosition(req, res, next);
+    expect(mockStatus).toHaveBeenCalledWith(400);
+    expect(mockSend.mock.calls[0][0]).toEqual({
+      result: "error",
+      detail: "code is too short",
+    });
+  });
+
+  it("should respond HTTP 400 if code contains non english characters or numbers", async () => {
+    expect.assertions(2);
+    const req = { body: { ...request.body, code: "abcdefd;" } } as any;
+    mockSet.mockReturnValue({ latitude: 100, longitude: 50, code: "xxxx" });
+    await postPosition(req, res, next);
+    expect(mockStatus).toHaveBeenCalledWith(400);
+    expect(mockSend.mock.calls[0][0]).toEqual({
+      result: "error",
+      detail: "code contains invalid character(s)",
     });
   });
 });

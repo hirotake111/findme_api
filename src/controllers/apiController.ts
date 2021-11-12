@@ -1,9 +1,8 @@
 import { RequestHandler } from "express";
 import { v4 as uuid, validate } from "uuid";
+
 import { PositionService } from "../services/positionService";
 import { Position } from "../types";
-import { Config } from "../utils/config";
-import { validatePosition } from "../utils/validators";
 
 export interface ApiController {
   getPosition: RequestHandler;
@@ -84,8 +83,24 @@ export const getApiController = (service: PositionService): ApiController => {
       // generate ID for the position
       let position: Position;
       const id = uuid();
-      // store data to database
+      // validate code
+      const { code } = req.body;
+      if (code) {
+        if (code.length < 4)
+          return res
+            .status(400)
+            .send({ result: "error", detail: "code is too short" });
+        if (!/^[a-zA-Z]*$/.test(code))
+          return res
+            .status(400)
+            .send({
+              result: "error",
+              detail: "code contains invalid character(s)",
+            });
+      }
+
       try {
+        // store data to database
         position = await service.set(id, req.body);
       } catch (e) {
         return res

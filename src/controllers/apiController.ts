@@ -59,14 +59,18 @@ export const getApiController = (service: PositionService): ApiController => {
         // if data is not found in the datatabase, respond 404
         if (!result)
           return res.status(404).send({ result: "error", detail: "not found" });
-        // respond data
-        res.status(200).send({
-          result: "success",
-          detail: {
-            latitude: result.latitude,
-            longitude: result.longitude,
-            code: result.code,
-          },
+        // verify code
+        if (code === result.code)
+          return res.status(200).send({
+            result: "success",
+            detail: {
+              latitude: result.latitude,
+              longitude: result.longitude,
+            },
+          });
+        return res.status(400).send({
+          result: "error",
+          detail: "incorrect code provided",
         });
       } catch (e) {
         console.log(e);

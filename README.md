@@ -1,4 +1,4 @@
-# ⚡️Findme API server⚡️
+# Findme API server⚡️
 
 Simple API server for my portofolio [Findme](https://findme.hiro.one)
 

@@ -97,6 +97,7 @@ describe("getPosition", () => {
 describe("getPositionByCode", () => {
   let req: any;
   const { getPositionByCode } = getApiController(mockPositionService);
+
   beforeEach(() => {
     req = {
       params: { id: "9493ee0f-d324-47de-987d-67d7099ac19b" },
@@ -106,12 +107,31 @@ describe("getPositionByCode", () => {
 
   it("should return position data if ID and code matches", async () => {
     expect.assertions(2);
-    mockPositionGet.mockReturnValue({ latitude: 11.111, longitude: 22.222 });
+    mockPositionGet.mockReturnValue({
+      latitude: 11.111,
+      longitude: 22.222,
+      code: "abcd",
+    });
     await getPositionByCode(req, res, next);
     expect(mockStatus).toHaveBeenCalledWith(200);
     expect(mockSend).toHaveBeenCalledWith({
       result: "success",
       detail: { latitude: 11.111, longitude: 22.222 },
+    });
+  });
+
+  it("should respond HTTP 400 if code doesn't match", async () => {
+    expect.assertions(2);
+    mockPositionGet.mockReturnValue({
+      latitude: 11.111,
+      longitude: 22.222,
+      code: "aaaa",
+    });
+    await getPositionByCode(req, res, next);
+    expect(mockStatus).toHaveBeenCalledWith(400);
+    expect(mockSend).toHaveBeenCalledWith({
+      result: "error",
+      detail: "incorrect code provided",
     });
   });
 

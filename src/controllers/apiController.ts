@@ -90,13 +90,11 @@ export const getApiController = (service: PositionService): ApiController => {
           return res
             .status(400)
             .send({ result: "error", detail: "code is too short" });
-        if (!/^[a-zA-Z]*$/.test(code))
-          return res
-            .status(400)
-            .send({
-              result: "error",
-              detail: "code contains invalid character(s)",
-            });
+        if (!/^[a-zA-Z0-9]*$/.test(code))
+          return res.status(400).send({
+            result: "error",
+            detail: "code contains invalid character(s)",
+          });
       }
 
       try {
